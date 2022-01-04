@@ -17,6 +17,7 @@ import { calculateGasMargin } from 'utils/calculateGasMargin'
 import { isAddress } from 'utils'
 
 import { getClaimKey, getClaimsRepoPath, transformRepoClaimsToUserClaims } from 'state/claim/hooks/utils'
+import { registerOnWindow } from 'utils/misc'
 
 export { useUserClaimData } from '@src/state/claim/hooks'
 
@@ -180,6 +181,20 @@ export function useUserClaims(account: Account): UserClaims | null {
   return claimKey ? claimInfo[claimKey] : null
 }
 
+// TODO: remove
+const createMockTx = () => ({
+  hash: '0x' + Math.round(Math.random() * 10).toString() + 'AxAFjAhG89G89AfnLK3CCxAfnLKQffQ782G89AfnLK3CCxxx123FF',
+  summary: `Claimed ${Math.random() * 3337} vCOW`,
+  claim: { recipient: '0xAdbfSdkjf87asdbgkxf283asf787123d' },
+  data: [
+    Math.round(Math.random() * 100),
+    Math.round(Math.random() * 100),
+    Math.round(Math.random() * 100),
+    Math.round(Math.random() * 100),
+    Math.round(Math.random() * 100),
+  ], // add the claim indices to state
+})
+
 /**
  * Hook that returns the claimCallback
  *
@@ -199,6 +214,11 @@ export function useClaimCallback(account: string | null | undefined): {
   // used for popup summary
   const addTransaction = useTransactionAdder()
   const vCowToken = chainId ? V_COW[chainId] : undefined
+
+  // TODO: remove
+  registerOnWindow({
+    addMockClaimTransactions: () => addTransaction(createMockTx()),
+  })
 
   const claimCallback = useCallback(
     async function (claimInput: ClaimInput[]) {
@@ -235,6 +255,7 @@ export function useClaimCallback(account: string | null | undefined): {
             hash: response.hash,
             summary: `Claimed ${formatSmart(vCowAmount)} vCOW`,
             claim: { recipient: account },
+            data: args[0], // add the claim indices to state
           })
           return response.hash
         })
