@@ -2,13 +2,14 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Trans } from '@lingui/macro'
 import { useActiveWeb3React } from 'hooks/web3'
-import { ExternalLink, CustomLightSpinner } from 'theme'
+import { ExternalLink, CustomLightSpinner, Spinner } from 'theme'
 import {
   useUserAvailableClaims,
   useUserUnclaimedAmount,
   FREE_CLAIM_TYPES,
   ClaimType,
   useClaimCallback,
+  NamedClaimTypeMap,
 } from 'state/claim/hooks'
 import { ButtonPrimary, ButtonSecondary } from 'components/Button'
 import Circle from 'assets/images/blue-loader.svg'
@@ -63,6 +64,8 @@ import { isAddress } from 'web3-utils'
 import useENS from 'hooks/useENS'
 import { TYPE } from 'theme'
 import { formatSmart } from 'utils/format'
+import { useAllClaimingTransactionIndices } from 'state/enhancedTransactions/hooks'
+import { CheckCircle } from 'react-feather'
 
 export default function Claim() {
   const { account, chainId } = useActiveWeb3React()
@@ -222,6 +225,9 @@ export default function Claim() {
       setIsInvestFlowStep(0)
     }
   }, [account, isSearchUsed])
+
+  const indices = useAllClaimingTransactionIndices()
+  console.log('🚀 ~ file: index.tsx ~ line 229 ~ Claim ~ indices', indices)
 
   return (
     <PageWrapper>
@@ -434,22 +440,32 @@ export default function Claim() {
                     const vCowPrice = typeToPriceMap[type]
                     const parsedAmount = parseClaimAmount(amount, chainId)
                     const cost = vCowPrice * Number(parsedAmount?.toSignificant(6))
+                    const isPendingClaim = indices.has(index)
 
                     return (
-                      <tr key={index}>
+                      <tr
+                        key={index}
+                        style={{ cursor: isPendingClaim ? 'pointer' : 'initial' }}
+                        onClick={isPendingClaim ? () => alert('opening activity panel') : undefined}
+                      >
                         <td>
                           {' '}
-                          <label className="checkAll">
-                            <input
-                              onChange={(event) => handleSelect(event, index)}
-                              type="checkbox"
-                              name="check"
-                              checked={isFree || selected.includes(index)}
-                              disabled={isFree}
-                            />
-                          </label>
+                          {/* User has on going pending claiming transactions? Show the loader */}
+                          {isPendingClaim ? (
+                            <CustomLightSpinner src={Circle} alt="loader" size="20px" color="lightgreen" />
+                          ) : (
+                            <label className="checkAll">
+                              <input
+                                onChange={(event) => handleSelect(event, index)}
+                                type="checkbox"
+                                name="check"
+                                checked={isFree || selected.includes(index)}
+                                disabled={isFree}
+                              />
+                            </label>
+                          )}
                         </td>
-                        <td>{isFree ? type : `Buy vCOW with ${currency}`}</td>
+                        <td>{isFree ? NamedClaimTypeMap[type] : `Buy vCOW with ${currency}`}</td>
                         <td width="150px">
                           <CowProtocolLogo size={16} /> {parsedAmount?.toFixed(0, { groupSeparator: ',' })} vCOW
                         </td>
