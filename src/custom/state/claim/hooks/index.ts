@@ -413,7 +413,6 @@ function _hasNoInputOrInputIsGreaterThanClaimAmount(
   return !input.amount || JSBI.greaterThan(JSBI.BigInt(input.amount), JSBI.BigInt(claim.amount))
 }
 
-<<<<<<< HEAD
 type LastAddress = string
 type ClaimAddressMapping = { [firstAddress: string]: LastAddress }
 const FETCH_CLAIM_MAPPING_PROMISES: Record<number, Promise<ClaimAddressMapping> | null> = {}
@@ -492,7 +491,8 @@ function fetchClaims(account: string, chainId: number): Promise<UserClaims> {
         throw error
       }))
   )
-=======
+}
+
 /**
  * Extend the Payable optional param
  */
@@ -504,5 +504,4 @@ function _extendFinalArg(args: ClaimManyFnArgs, extendedArg: Record<any, any>) {
   })
 
   return args
->>>>>>> claim hooks mock tx edit and helper fn
 }
