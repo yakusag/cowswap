@@ -79,8 +79,6 @@ export function useUserAvailableClaims(account: Account): UserClaims {
 
   const results = useSingleContractMultipleData(contract, 'isClaimed', claimIndexes)
 
-  console.log(`useUserAvailableClaims::re-render`, userClaims, claimIndexes, results)
-
   return useMemo(() => {
     if (!userClaims || userClaims.length === 0) {
       // user has no claims
@@ -392,7 +390,6 @@ const FETCH_CLAIM_FILE_PROMISES: { [startingAddress: string]: Promise<{ [address
  * Customized fetchClaimFile function
  */
 function fetchClaimsFile(address: string, chainId: number): Promise<{ [address: string]: RepoClaims }> {
-  console.log(`fetching key`, address)
   const key = getClaimKey(address, chainId)
   return (
     FETCH_CLAIM_FILE_PROMISES[key] ??
