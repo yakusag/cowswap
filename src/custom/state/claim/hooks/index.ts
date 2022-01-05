@@ -18,6 +18,8 @@ import { isAddress } from 'utils'
 
 import { getClaimKey, getClaimsRepoPath, transformRepoClaimsToUserClaims } from 'state/claim/hooks/utils'
 import { registerOnWindow } from 'utils/misc'
+import mockData, { MOCK_INDICES } from './mocks/claimData'
+import { getIndexes } from './utils'
 
 export { useUserClaimData } from '@src/state/claim/hooks'
 
@@ -25,12 +27,21 @@ const CLAIMS_REPO_BRANCH = 'main'
 export const CLAIMS_REPO = `https://raw.githubusercontent.com/gnosis/cow-merkle-drop/${CLAIMS_REPO_BRANCH}/`
 
 export const enum ClaimType {
-  Airdrop = 'Airdrop', // free, no vesting, can be available on both mainnet and gchain
-  GnoOption = 'GnoOption', // paid, with vesting, must use GNO, can be available on both mainnet and gchain
-  UserOption = 'UserOption', // paid, with vesting, must use Native currency, can be available on both mainnet and gchain
-  Investor = 'Investor', // paid, with vesting, must use USDC, only on mainnet
-  Team = 'Team', // free, with vesting, only on mainnet
-  Advisor = 'Advisor', // free, with vesting, only on mainnet
+  Airdrop, // free, no vesting, can be available on both mainnet and gchain
+  GnoOption, // paid, with vesting, must use GNO, can be available on both mainnet and gchain
+  UserOption, // paid, with vesting, must use Native currency, can be available on both mainnet and gchain
+  Investor, // paid, with vesting, must use USDC, only on mainnet
+  Team, // free, with vesting, only on mainnet
+  Advisor, // free, with vesting, only on mainnet
+}
+
+export const NamedClaimTypeMap = {
+  [ClaimType.Airdrop]: 'Airdrop',
+  [ClaimType.GnoOption]: 'GnoOption',
+  [ClaimType.UserOption]: 'UserOption',
+  [ClaimType.Investor]: 'Investor',
+  [ClaimType.Team]: 'Team',
+  [ClaimType.Advisor]: 'Advisor',
 }
 
 type RepoClaimType = keyof typeof ClaimType
@@ -182,17 +193,11 @@ export function useUserClaims(account: Account): UserClaims | null {
 }
 
 // TODO: remove
-const createMockTx = () => ({
+const createMockTx = (data: number[]) => ({
   hash: '0x' + Math.round(Math.random() * 10).toString() + 'AxAFjAhG89G89AfnLK3CCxAfnLKQffQ782G89AfnLK3CCxxx123FF',
   summary: `Claimed ${Math.random() * 3337} vCOW`,
   claim: { recipient: '0xAdbfSdkjf87asdbgkxf283asf787123d' },
-  data: [
-    Math.round(Math.random() * 100),
-    Math.round(Math.random() * 100),
-    Math.round(Math.random() * 100),
-    Math.round(Math.random() * 100),
-    Math.round(Math.random() * 100),
-  ], // add the claim indices to state
+  data, // add the claim indices to state
 })
 
 /**
@@ -217,7 +222,16 @@ export function useClaimCallback(account: string | null | undefined): {
 
   // TODO: remove
   registerOnWindow({
-    addMockClaimTransactions: () => addTransaction(createMockTx()),
+    addMockClaimTransactions: (data?: number[]) => {
+      let finalData: number[] | undefined = data
+
+      if (!finalData) {
+        const mockDataIndices = connectedAccount ? getIndexes(mockData[connectedAccount] || []) : []
+        finalData = mockDataIndices?.length > 0 ? mockDataIndices : MOCK_INDICES
+      }
+
+      return addTransaction(createMockTx(finalData))
+    },
   })
 
   const claimCallback = useCallback(
@@ -244,13 +258,12 @@ export function useClaimCallback(account: string | null | undefined): {
 
       return vCowContract.estimateGas['claimMany'](...args).then((estimatedGas) => {
         // Last item in the array contains the call overrides
-        args[args.length - 1] = {
-          ...args[args.length - 1], // add back whatever is already there
+        const extendedArgs = _extendFinalArg(args, {
           from: connectedAccount, // add the `from` as the connected account
           gasLimit: calculateGasMargin(chainId, estimatedGas), // add the estimated gas limit
-        }
+        })
 
-        return vCowContract.claimMany(...args).then((response: TransactionResponse) => {
+        return vCowContract.claimMany(...extendedArgs).then((response: TransactionResponse) => {
           addTransaction({
             hash: response.hash,
             summary: `Claimed ${formatSmart(vCowAmount)} vCOW`,
@@ -400,6 +413,7 @@ function _hasNoInputOrInputIsGreaterThanClaimAmount(
   return !input.amount || JSBI.greaterThan(JSBI.BigInt(input.amount), JSBI.BigInt(claim.amount))
 }
 
+<<<<<<< HEAD
 type LastAddress = string
 type ClaimAddressMapping = { [firstAddress: string]: LastAddress }
 const FETCH_CLAIM_MAPPING_PROMISES: Record<number, Promise<ClaimAddressMapping> | null> = {}
@@ -478,4 +492,17 @@ function fetchClaims(account: string, chainId: number): Promise<UserClaims> {
         throw error
       }))
   )
+=======
+/**
+ * Extend the Payable optional param
+ */
+function _extendFinalArg(args: ClaimManyFnArgs, extendedArg: Record<any, any>) {
+  const lastArg = args.pop()
+  args.push({
+    ...lastArg, // add back whatever is already there
+    ...extendedArg,
+  })
+
+  return args
+>>>>>>> claim hooks mock tx edit and helper fn
 }
