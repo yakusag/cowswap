@@ -35,6 +35,15 @@ export const enum ClaimType {
   Advisor, // free, with vesting, only on mainnet
 }
 
+export type TypeToPriceMapper = Map<ClaimType, number>
+
+// Hardcoded values
+export const ClaimTypePriceMap: TypeToPriceMapper = new Map([
+  [ClaimType.GnoOption, 16.66],
+  [ClaimType.Investor, 26.66],
+  [ClaimType.UserOption, 36.66],
+])
+
 export const NamedClaimTypeMap = {
   [ClaimType.Airdrop]: 'Airdrop',
   [ClaimType.GnoOption]: 'GnoOption',

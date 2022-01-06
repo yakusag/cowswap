@@ -4,10 +4,12 @@ import { V_COW } from 'constants/tokens'
 import {
   CLAIMS_REPO,
   ClaimType,
+  ClaimTypePriceMap,
   FREE_CLAIM_TYPES,
   PAID_CLAIM_TYPES,
   RepoClaims,
   REVERSE_CLAIM_TYPE_MAPPING,
+  TypeToPriceMapper,
   UserClaims,
 } from 'state/claim/hooks/index'
 
@@ -96,24 +98,13 @@ export function getTypeToCurrencyMap(chainId: number | undefined): TypeToCurrenc
   return map
 }
 
-export type TypeToPriceMapper = {
-  [key: string]: number
-}
-
 /**
  * Helper function to get vCow price based on claim type and chainId
  *
  * @param type
  */
 export function getTypeToPriceMap(): TypeToPriceMapper {
-  // Hardcoded values
-  const map: TypeToPriceMapper = {
-    GnoOption: 16.66,
-    Investor: 26.66,
-    UserOption: 36.66,
-  }
-
-  return map
+  return ClaimTypePriceMap
 }
 
 /**
