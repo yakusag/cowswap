@@ -45,6 +45,7 @@ import {
   InputErrorText,
   InputFieldTitle,
   ClaimAccountButtons,
+  ClaimRow,
 } from 'pages/Claim/styled'
 import {
   getTypeToCurrencyMap,
@@ -118,6 +119,9 @@ export default function Claim() {
 
   const hasClaims = useMemo(() => userClaimData.length, [userClaimData])
   const isAirdropOnly = useMemo(() => !hasPaidClaim(userClaimData), [userClaimData])
+
+  // get current pending claims set in activities
+  const indicesSet = useAllClaimingTransactionIndices()
 
   // handle table select change
   const [selected, setSelected] = useState<number[]>([])
@@ -225,9 +229,6 @@ export default function Claim() {
       setIsInvestFlowStep(0)
     }
   }, [account, isSearchUsed])
-
-  const indices = useAllClaimingTransactionIndices()
-  console.log('🚀 ~ file: index.tsx ~ line 229 ~ Claim ~ indices', indices)
 
   return (
     <PageWrapper>
@@ -440,19 +441,19 @@ export default function Claim() {
                     const vCowPrice = typeToPriceMap[type]
                     const parsedAmount = parseClaimAmount(amount, chainId)
                     const cost = vCowPrice * Number(parsedAmount?.toSignificant(6))
-                    const isPendingClaim = indices.has(index)
+                    const isPendingClaim = indicesSet.has(index)
 
                     return (
-                      <tr
+                      <ClaimRow
                         key={index}
-                        style={{ cursor: isPendingClaim ? 'pointer' : 'initial' }}
-                        onClick={isPendingClaim ? () => alert('opening activity panel') : undefined}
+                        isPending={isPendingClaim}
+                        onClick={isPendingClaim ? () => console.log('Claim::Opening Orders panel') : undefined}
                       >
                         <td>
                           {' '}
                           {/* User has on going pending claiming transactions? Show the loader */}
                           {isPendingClaim ? (
-                            <CustomLightSpinner src={Circle} alt="loader" size="20px" color="lightgreen" />
+                            <CustomLightSpinner src={Circle} title="Claiming in progress..." alt="loader" size="20px" />
                           ) : (
                             <label className="checkAll">
                               <input
@@ -473,7 +474,7 @@ export default function Claim() {
                         <td>{isFree ? <span className="green">Free!</span> : `${cost} ${currency}`}</td>
                         <td>{type === ClaimType.Airdrop ? 'No' : '4 years (linear)'}</td>
                         <td>28 days, 10h, 50m</td>
-                      </tr>
+                      </ClaimRow>
                     )
                   })}
                 </tbody>
